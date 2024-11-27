@@ -102,6 +102,8 @@ class Game:
             while True:
                 x += x_step
                 y += y_step
+                if x < 0 or y < 0:
+                    return False
                 try:
                     cell = self._gamefield.gamefield[y][x]
                 except IndexError:
@@ -118,10 +120,10 @@ class Game:
                 if cell == role:
                     # Check if there are winning chains in four dimensions from located cell:
                     # eastwards, south-east, southwards, south-west.
-                    for steps in ((1, 0), (1, 1), (0, 1), (-1, -1)):
+                    for steps in ((1, 0), (1, 1), (0, 1), (-1, 1)):
                         if _locate_chain(col_num, line_num, *steps):
                             return True
-            return False
+        return False
 
     def _empty_cells(self) -> list[tuple[int, int]]:
         """

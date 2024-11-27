@@ -13,12 +13,12 @@ def play(game: Game):
         try:
             result = func()
         except NoWinnerError:
-            print("No winner in this game!")
+            print("No winner in this game!\n")
             return True
         finally:
             game.draw_field()
         if game.winner:
-            print(f"{game.winner.title()} wins!")
+            print(f"{game.winner.title()} wins!\n")
         return result
 
     functions = (game.make_cpu_move, game.make_human_move)
