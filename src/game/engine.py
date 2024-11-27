@@ -102,13 +102,9 @@ class Game:
             while True:
                 x += x_step
                 y += y_step
-                if x < 0 or y < 0:
+                if (not (0 <= x < len(self._gamefield.gamefield[0]))) or (not (0 <= y < len(self._gamefield.gamefield))):
                     return False
-                try:
-                    cell = self._gamefield.gamefield[y][x]
-                except IndexError:
-                    return False
-                if cell == role:
+                if self._gamefield.gamefield[y][x] == role:
                     count += 1
                 else:
                     return False
