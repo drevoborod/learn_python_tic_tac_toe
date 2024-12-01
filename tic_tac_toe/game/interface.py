@@ -106,6 +106,8 @@ class GameField:
         while self.cell_exists(x, y):
             if self.get(x, y) == role:
                 count += 1
+            else:
+                return count
             x += x_offset
             y += y_offset
         return count
