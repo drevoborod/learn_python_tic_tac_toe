@@ -1,6 +1,6 @@
 from typing import Callable
 
-from game.engine import Game, NoWinnerError
+from tic_tac_toe.game.engine import Game, NoWinnerError
 
 
 def play(game: Game):
