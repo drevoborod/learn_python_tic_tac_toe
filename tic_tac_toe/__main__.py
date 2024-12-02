@@ -38,4 +38,4 @@ def play(game: Game):
 
 
 if __name__ == "__main__":
-    play(Game().init_game())
+    play(Game().assign_player_roles())

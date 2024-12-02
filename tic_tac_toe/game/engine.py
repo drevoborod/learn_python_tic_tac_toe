@@ -1,4 +1,4 @@
-from enum import StrEnum
+from enum import Enum
 from random import randint, choice, shuffle
 from typing import Self
 
@@ -8,58 +8,37 @@ from tic_tac_toe.game.interface import ask_coordinates, CoordinatesError, GameFi
 # How many items should be placed in one row to win the game:
 WIN_LEN = 3
 
-
-class PlayerTitles(StrEnum):
-    """
-    Text titles of different kinds of players.
-    """
-
-    HUMAN_PLAYER = "human"
-    COMPUTER_PLAYER = "computer"
+# Text titles of different kinds of players:
+HUMAN_PLAYER = "human"
+COMPUTER_PLAYER = "computer"
 
 
 class NoWinnerError(Exception): pass
 
+
 class Game:
 
     def __init__(self, board_width: int = WIDTH, board_height: int = HEIGHT, win_len: int = WIN_LEN):
-        self._gamefield = GameField(width=board_width, height=board_height)
-        self._win_len = win_len
-        self._human_role = None
-        self._cpu_role = None
-        self._winner: PlayerTitles | None = None
+        self._gamefield: GameField = GameField(width=board_width, height=board_height)
+        self._win_len: int = win_len
+        self.human_role: int | None = None
+        self.cpu_role: int | None = None
+        self._winner: str | None = None
 
-    def init_game(self) -> Self:
+    def assign_player_roles(self) -> Self:
         """
-        Prepares the game. Should be run firstly.
+        Determines which player (human/computer) will play which figure (zero/cross). Should be run firstly.
 
         """
 
         roles = [self._gamefield.cross, self._gamefield.zero]
         shuffle(roles)
-        self._human_role = roles[0]
-        self._cpu_role = roles[1]
+        self.human_role = roles[0]
+        self.cpu_role = roles[1]
         return self
 
     @property
-    def human_role(self) -> int:
-        if self._human_role is None:
-            self.init_game()
-        return self._human_role
-
-    @property
-    def cpu_role(self) -> int:
-        if self._cpu_role is None:
-            self.init_game()
-        return self._cpu_role
-
-    @property
     def human_moves_first(self) -> bool:
-        """
-        Checks whether the human player should move first or not.
-
-        :return: True if human player's move should be done first, False otherwise.
-        """
         if self.human_role == self._gamefield.cross:
             return True
         return False
@@ -92,14 +71,14 @@ class Game:
         while True:
             try:
                 x, y = ask_coordinates()
-                self._gamefield.set(x, y, self._human_role)
+                self._gamefield.set(x, y, self.human_role)
             except CoordinatesError as err:
                 print(err)
                 continue
             break
         victory = self._check_victory(self.human_role)
         if victory:
-            self._winner = PlayerTitles.HUMAN_PLAYER
+            self._winner = HUMAN_PLAYER
         return victory
 
     def make_cpu_move(self) -> bool:
@@ -113,7 +92,7 @@ class Game:
         self._gamefield.set(*choice(empty_cells), self.cpu_role)
         victory = self._check_victory(self.cpu_role)
         if victory:
-            self._winner = PlayerTitles.COMPUTER_PLAYER
+            self._winner = COMPUTER_PLAYER
         return victory
 
     def _check_victory(self, role: int) -> bool:
