@@ -3,6 +3,14 @@ import pytest
 from tic_tac_toe.game.engine import Game
 
 
+def matrix_to_dict(matrix: list[list[int]]) -> dict[tuple[int, int], int]:
+    result = {}
+    for line_num, line in enumerate(matrix):
+        for col_num, value in enumerate(line):
+            result[(col_num, line_num)] = value
+    return result
+
+
 @pytest.mark.parametrize("field", (
     [
         [0, 0, 0],
@@ -50,7 +58,7 @@ def test__check_victory__return_true(game: Game, field):
     """
     Field configurations when the game should be winned.
     """
-    game._gamefield._board = field
+    game._gamefield._board = matrix_to_dict(field)
     assert game._check_victory(2) is True
 
 
@@ -80,5 +88,5 @@ def test__check_victory__return_false(game: Game, field):
     """
     Field configurations when the game should be lost.
     """
-    game._gamefield._board = field
+    game._gamefield._board = matrix_to_dict(field)
     assert game._check_victory(2) is False
