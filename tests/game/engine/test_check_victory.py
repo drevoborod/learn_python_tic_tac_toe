@@ -3,11 +3,11 @@ import pytest
 from tic_tac_toe.game.engine import Game
 
 
-def matrix_to_dict(matrix: list[list[int]]) -> dict[tuple[int, int], int]:
-    result = {}
+def matrix_to_dict(matrix: list[list[int]]) -> dict[int, set[tuple[int, int]]]:
+    result = {0: set(), 1: set(), 2: set()}
     for line_num, line in enumerate(matrix):
         for col_num, value in enumerate(line):
-            result[(col_num, line_num)] = value
+            result[value].add((col_num, line_num))
     return result
 
 

@@ -38,7 +38,15 @@ class GameField:
     def __init__(self, width: int = WIDTH, height: int = HEIGHT):
         self.width = width
         self.height = height
-        self._board: dict[tuple[int, int], int] = {}
+        self._board: dict[int, set[tuple[int, int]]] = {
+            self.zero: set(),
+            self.cross: set(),
+            self.empty: {
+                (col_num, line_num)
+                for col_num in range(self.width)
+                for line_num in range(self.height)
+            }
+        }
 
     def get(self, x: int, y: int) -> int:
         """
@@ -52,8 +60,10 @@ class GameField:
         """
         if not self.cell_exists(x, y):
             raise CoordinatesError("Coordinates are out of bounds")
-        if cell := self._board.get((x, y)):
-            return cell
+        if (x, y) in self._board[self.cross]:
+            return self.cross
+        if (x, y) in self._board[self.zero]:
+            return self.zero
         return self.empty
 
     def set(self, x: int, y: int, symbol: int) -> None:
@@ -69,7 +79,8 @@ class GameField:
         cell_data = self.get(x, y)
         if cell_data != self.empty:
             raise CoordinatesError("Attempt to write to non-empty cell")
-        self._board[(x, y)] = symbol
+        self._board[symbol].add((x, y))
+        self._board[self.empty].remove((x, y))
 
     def filter_cells(self, cell_contents: int) -> Iterator[tuple[int, int]]:
         """
@@ -79,15 +90,8 @@ class GameField:
         :return: iterator of cell coordinates as 2-tuples: (x, y), (x, y), ....
 
         """
-        if cell_contents in (self.cross, self.zero):
-            for key, value in self._board.items():
-                if value == cell_contents:
-                    yield key
-        else:
-            for line_num in range(self.height):
-                for col_num in range(self.width):
-                    if (value := (col_num, line_num)) not in self._board:
-                        yield value
+        for cell in self._board[cell_contents]:
+            yield cell
 
     def locate_cells_count_by_offset(self, x: int, y: int, x_offset: int, y_offset: int, role: int) -> int:
         """
