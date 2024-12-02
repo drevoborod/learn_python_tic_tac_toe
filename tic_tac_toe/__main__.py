@@ -1,6 +1,6 @@
 from typing import Callable
 
-from game.engine import Game, NoWinnerError
+from tic_tac_toe.game.engine import Game, NoWinnerError
 
 
 def play(game: Game):
@@ -38,4 +38,4 @@ def play(game: Game):
 
 
 if __name__ == "__main__":
-    play(Game().init_game())
+    play(Game().assign_player_roles())
