@@ -15,7 +15,7 @@ def play(game: Game):
         except NoWinnerError:
             print("No winner in this game!\n")
             return True
-        finally:
+        else:
             game.draw_field()
         if game.winner:
             print(f"{game.winner.title()} wins!\n")
