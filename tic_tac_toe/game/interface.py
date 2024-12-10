@@ -1,7 +1,6 @@
 import re
 from collections.abc import Iterator
 
-
 # Pseudographical primitives:
 VERTICAL_LINE = "︱"
 HORIZONTAL_LINE = "𝄖"
@@ -48,6 +47,12 @@ class GameField:
             }
         }
 
+    def is_cell_accessible(self, x: int, y: int) -> bool:
+        cell_data = self.get(x, y)
+        if cell_data == self.empty:
+            return True
+        return False
+
     def get(self, x: int, y: int) -> int:
         """
         Returns value of a cell by provided coordinates.
@@ -76,8 +81,7 @@ class GameField:
         :raise: CoordinatesError if any of the coordinates is out of bounds.
 
         """
-        cell_data = self.get(x, y)
-        if cell_data != self.empty:
+        if not self.is_cell_accessible(x, y):
             raise CoordinatesError("Attempt to write to non-empty cell")
         self._board[symbol].add((x, y))
         self._board[self.empty].remove((x, y))

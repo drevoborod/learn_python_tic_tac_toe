@@ -1,19 +1,15 @@
-from enum import Enum
-from random import randint, choice, shuffle
-from typing import Self
+from itertools import cycle
+from random import shuffle
+from typing import Self, Iterator
 
-from tic_tac_toe.game.interface import ask_coordinates, CoordinatesError, GameField, HEIGHT, WIDTH
-
+from tic_tac_toe.game.interface import GameField, HEIGHT, WIDTH
+from tic_tac_toe.game.players import Player
 
 # How many items should be placed in one row to win the game:
 WIN_LEN = 3
 
-# Text titles of different kinds of players:
-HUMAN_PLAYER = "human"
-COMPUTER_PLAYER = "computer"
 
-
-class NoWinnerError(Exception): pass
+class GameError(Exception): pass
 
 
 class Game:
@@ -21,37 +17,24 @@ class Game:
     def __init__(self, board_width: int = WIDTH, board_height: int = HEIGHT, win_len: int = WIN_LEN):
         self._gamefield: GameField = GameField(width=board_width, height=board_height)
         self._win_len: int = win_len
-        self.human_role: int | None = None
-        self.cpu_role: int | None = None
-        self._winner: str | None = None
+        self._players: dict[int, Player] = {}
+        self._winner: Player | None = None
 
-    def assign_player_roles(self) -> Self:
+    def init_players(self, player1, player2) -> Self:
         """
-        Determines which player (human/computer) will play which figure (zero/cross). Should be run firstly.
+        Determines which player will play which figure (zero/cross). Should be run firstly.
 
         """
-
         roles = [self._gamefield.cross, self._gamefield.zero]
         shuffle(roles)
-        self.human_role = roles[0]
-        self.cpu_role = roles[1]
+        self._players[roles[0]] = player1
+        self._players[roles[1]] = player2
         return self
 
     @property
-    def human_moves_first(self) -> bool:
-        if self.human_role == self._gamefield.cross:
-            return True
-        return False
-
-    @property
-    def winner(self) -> str:
-        """
-        Returns winner's text representation.
-
-        :return: text representation of a player who wins ("human" or "computer" by default).
-
-        """
-        return self._winner
+    def first_players_name(self):
+        self._check_players_ready()
+        return self._players[self._gamefield.cross].name
 
     def draw_field(self) -> None:
         """
@@ -60,40 +43,23 @@ class Game:
         """
         self._gamefield.draw()
 
-    def make_human_move(self) -> bool:
+    def play(self) -> Iterator[str]:
         """
-        Makes human player's move and returns True if the human wins.
-
-        :return: True if the human wins, False otherwise.
+        Runs main game cycle and returns message which explains the results.
 
         """
-        self._empty_cells_remain()
-        while True:
-            try:
-                x, y = ask_coordinates()
-                self._gamefield.set(x, y, self.human_role)
-            except CoordinatesError as err:
-                print(err)
-                continue
-            break
-        victory = self._check_victory(self.human_role)
-        if victory:
-            self._winner = HUMAN_PLAYER
-        return victory
-
-    def make_cpu_move(self) -> bool:
-        """
-        Makes computer's move and returns True if the computer wins.
-
-        :return: True if the computer wins, False otherwise.
-
-        """
-        empty_cells = self._empty_cells_remain()
-        self._gamefield.set(*choice(empty_cells), self.cpu_role)
-        victory = self._check_victory(self.cpu_role)
-        if victory:
-            self._winner = COMPUTER_PLAYER
-        return victory
+        self._check_players_ready()
+        # The player playing with "X" should always start first:
+        for role in cycle(sorted(self._players, key=lambda k: 0 if k == self._gamefield.cross else 1)):
+            if not self._empty_cells_remain():
+                yield "No moves left! There is no winner!"
+                break
+            x, y = self._players[role].next_move(self._gamefield)
+            self._gamefield.set(x, y, role)
+            if self._check_victory(role):
+                yield f"{self._players[role].name.title()} wins!"
+                break
+            yield ""
 
     def _check_victory(self, role: int) -> bool:
         """
@@ -112,14 +78,12 @@ class Game:
                     return True
         return False
 
-    def _empty_cells_remain(self) -> list[tuple[int, int]]:
-        """
-        Returns list with empty cells coordinates. If no empty cells left, raises NoWinnerError.
-
-        :return: list of 2-tuples with empty cells: [(x, y), (x, y), ...]. Numbers start with 1.
-        :raise: NoWinnerError if there are no empty cells left.
-        """
+    def _empty_cells_remain(self) -> bool:
         empty_cells = list(self._gamefield.filter_cells(self._gamefield.empty))
-        if not empty_cells:
-            raise NoWinnerError
-        return empty_cells
+        if empty_cells:
+            return True
+        return False
+
+    def _check_players_ready(self):
+        if not self._players:
+            raise GameError("No players set!")
