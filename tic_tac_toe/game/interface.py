@@ -1,7 +1,6 @@
 import re
 from collections.abc import Iterator
 
-
 # Pseudographical primitives:
 VERTICAL_LINE = "︱"
 HORIZONTAL_LINE = "𝄖"
@@ -36,17 +35,23 @@ class GameField:
     }
 
     def __init__(self, width: int = WIDTH, height: int = HEIGHT):
-        self._width = width
-        self._height = height
-        self._board: list[list[int]] = [[self.empty for _ in range(width)] for _ in range(height)]
+        self.width = width
+        self.height = height
+        self._board: dict[int, set[tuple[int, int]]] = {
+            self.zero: set(),
+            self.cross: set(),
+            self.empty: {
+                (col_num, line_num)
+                for col_num in range(self.width)
+                for line_num in range(self.height)
+            }
+        }
 
-    @property
-    def width(self) -> int:
-        return self._width
-
-    @property
-    def height(self) -> int:
-        return self._height
+    def is_cell_accessible(self, x: int, y: int) -> bool:
+        cell_data = self.get(x, y)
+        if cell_data == self.empty:
+            return True
+        return False
 
     def get(self, x: int, y: int) -> int:
         """
@@ -60,7 +65,11 @@ class GameField:
         """
         if not self.cell_exists(x, y):
             raise CoordinatesError("Coordinates are out of bounds")
-        return self._board[y][x]
+        if (x, y) in self._board[self.cross]:
+            return self.cross
+        if (x, y) in self._board[self.zero]:
+            return self.zero
+        return self.empty
 
     def set(self, x: int, y: int, symbol: int) -> None:
         """
@@ -72,10 +81,10 @@ class GameField:
         :raise: CoordinatesError if any of the coordinates is out of bounds.
 
         """
-        cell_data = self.get(x, y)
-        if cell_data != self.empty:
+        if not self.is_cell_accessible(x, y):
             raise CoordinatesError("Attempt to write to non-empty cell")
-        self._board[y][x] = symbol
+        self._board[symbol].add((x, y))
+        self._board[self.empty].remove((x, y))
 
     def filter_cells(self, cell_contents: int) -> Iterator[tuple[int, int]]:
         """
@@ -85,10 +94,8 @@ class GameField:
         :return: iterator of cell coordinates as 2-tuples: (x, y), (x, y), ....
 
         """
-        for line_num, line in enumerate(self._board):
-            for col_num, column in enumerate(line):
-                if column == cell_contents:
-                    yield col_num, line_num
+        for cell in self._board[cell_contents]:
+            yield cell
 
     def locate_cells_count_by_offset(self, x: int, y: int, x_offset: int, y_offset: int, role: int) -> int:
         """
@@ -127,14 +134,14 @@ class GameField:
         return True
 
     def draw(self) -> None:
-       """
-       Draw the game field in the terminal.
+        """
+        Draw the game field in the terminal.
 
-       """
-       for num, line in enumerate(self._board):
-           print(VERTICAL_LINE.join(self.mapping[x] for x in line))
-           if num < len(self._board):
-               print(f"{HORIZONTAL_LINE}{''.join(HORIZONTAL_LINE for _ in range(len(line)))}")
+        """
+        for line_num in range(self.height):
+            print(VERTICAL_LINE.join(self.mapping[self.get(col_num, line_num)] for col_num in range(self.width)))
+            if line_num < self.height - 1:
+                print(f"{HORIZONTAL_LINE}{''.join(HORIZONTAL_LINE for _ in range(self.width))}")
 
 
 def ask_coordinates(message: str = None) -> tuple[int, int]:

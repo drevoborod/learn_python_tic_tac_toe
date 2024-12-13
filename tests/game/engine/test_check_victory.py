@@ -46,11 +46,8 @@ from tic_tac_toe.game.engine import Game
     ],
 
 ))
-def test__check_victory__return_true(game: Game, field):
-    """
-    Field configurations when the game should be winned.
-    """
-    game._gamefield._board = field
+def test__check_victory__return_true_when_game_should_be_winned(make_game, field):
+    game = make_game(field)
     assert game._check_victory(2) is True
 
 
@@ -76,9 +73,6 @@ def test__check_victory__return_true(game: Game, field):
         [1, 2, 2],
     ],
 ))
-def test__check_victory__return_false(game: Game, field):
-    """
-    Field configurations when the game should be lost.
-    """
-    game._gamefield._board = field
+def test__check_victory__return_false_when_game_should_be_lost(field, make_game):
+    game = make_game(field)
     assert game._check_victory(2) is False
